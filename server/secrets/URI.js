@@ -1,0 +1,1 @@
+module.exports = "mongodb+srv://antamir08:xiOdghi1u7kBhcAJ@hop.xjlyk.mongodb.net/instagram?retryWrites=true&w=majority&appName=HOP";
