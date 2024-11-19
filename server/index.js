@@ -2,12 +2,14 @@ const express = require('express');
 
 const connect = require('./common/connectToDB');
 const signup = require('./routes/signup.js');
+const login = require("./routes/login.js");
 
 const app = express();
 const port = 9090;
 
 app.use(express.json());
 app.use(signup);
+app.use(login);
 
 connect();
 
