@@ -6,6 +6,8 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 
 const signup = Router();
+const login = Router();
+
 const saltRounds = 10; 
 
 
@@ -27,6 +29,22 @@ const dataValidation = async({username, password, email}) => {
     if(dbUsername !== null) return({type: "rejected", error: "An Account with that username Already exists"});
 
     return({type: "accepted"});
+}
+
+const manual = async ({res, data}) =>{
+    let id = data._id
+    const account = await userModel.findOne({id})
+    try{
+        isValid = await bcrypt.compare(data.password, account.password);
+        if(isValid){
+            const token = jwt.sign(data, jtw_secret);
+            res.send(token);
+            return;
+        }
+    }catch(e){
+        console.log(e);
+    }
+    res.send("error")
 }
 
 signup.post('/signup', async (req, res) =>{
@@ -62,4 +80,26 @@ signup.post('/signup', async (req, res) =>{
     res.send(token);
 });
 
-module.exports = signup;
+login.post('/login', async(req, res) =>{
+    let data = req.body
+    const {token} = data;
+
+    if(token){
+        validateToken(token).then(({error, message}) =>{
+            if(error){
+                res.status(401).send(message);
+                return;
+            }
+            res.status(200).send(message);
+
+        });
+    }else{
+        if(!data.username) res.status(400).send("missing username");
+        if(!data.email) res.status(400).send("missing email");
+        if(!data.password) res.status(400).send("missing password");
+        
+        manual({res, data})
+    }
+});
+
+module.exports = {login, signup}

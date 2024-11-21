@@ -1,54 +1,48 @@
 const { Router } = require('express');
 const jtw_secret = require('../secrets/JWT');
-const userModel = require('../schemas/userSchema');
+const validateToken = require('../common/validateToken');
 
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const userModel = require('../schemas/userSchema');
+
 const login = Router();
 
-async function findAccount (data){
-    const {username, email} = data;
-    const account = await userModel.findOne({email, username});
-    return account;
+const manual = async ({res, data}) =>{
+    let id = data._id
+    const account = await userModel.findOne({id})
+    try{
+        isValid = await bcrypt.compare(data.password, account.password);
+        if(isValid){
+            const token = jwt.sign(data, jtw_secret);
+            res.send(token);
+            return;
+        }
+    }catch(e){
+        console.log(e);
+    }
+    res.send("error")
 }
+
 login.post('/login', async(req, res) =>{
     let data = req.body
     const {token} = data;
 
     if(token){
-        jwt.verify(token, jtw_secret, (error, user) =>{
+        validateToken(token).then(({error, message}) =>{
             if(error){
-                res.send("Token is invalid or expired")
+                res.status(401).send(message);
                 return;
             }
-            let account;
-            findAccount(user).then((data) =>{
-                account = Object.keys(data._doc);
-                if(account.length == 0){
-                    res.send("This account doesnt exist, please login again");
-                    return;
-                }  
-            })        
-            res.send("accepted")
-        })
-    }else{
-        if(!data.username) res.send({error: 400, reason: "missing username"});
-        if(!data.email) res.send({error: 400, reason: "missing email"});
-        if(!data.password) res.send({error: 400, reason: "missing password"});
-        
-        const account = findAccount(data);
-        let isValid;
-        
-        bcrypt.compare(data.password, account.password, function(err, result) {
-            if(err) console.log(err);
-            isValid = result
-        });
+            res.status(200).send(message);
 
-        if(isValid){
-            const token = jwt.sign(data, jtw_secret);
-            res.send(token);
-        }
-        res.send("error")
+        });
+    }else{
+        if(!data.username) res.status(400).send("missing username");
+        if(!data.email) res.status(400).send("missing email");
+        if(!data.password) res.status(400).send("missing password");
+        
+        manual({res, data})
     }
 });
 

@@ -5,7 +5,10 @@ const userSchema = new Schema({
     password: { type: String, required: true},
     email: { type: String, required: true},
     profile_img: { type: String},
-    created_at: { type: Date, required: true}
+    created_at: { type: Date, required: true},
+    posts: { type: Array, ref: 'Posts' },
+    comments: {type: Array, ref: 'Comments'},
+    followers: {type: Array}
 });
 
 const userModel = mongoose.model("User", userSchema);
