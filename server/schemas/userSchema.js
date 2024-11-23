@@ -8,7 +8,7 @@ const userSchema = new Schema({
     created_at: { type: Date, required: true},
     posts: { type: Array, ref: 'Posts' },
     comments: {type: Array, ref: 'Comments'},
-    followers: [{type: mongoose.Types.ObjectId, ref: "users", unique: true}]
+    followers: [{type: mongoose.Types.ObjectId, ref: "User", unique: true}]
 });
 
 const userModel = mongoose.model("User", userSchema);

@@ -81,7 +81,6 @@ const signupLogic = async ({req, res}) =>{
             password,
             email,
             created_at: new Date(),
-            followers: new Set()
         })
         console.log(mongo_response);
         
