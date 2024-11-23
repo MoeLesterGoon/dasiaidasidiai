@@ -6,7 +6,7 @@ const userModel = require('../schemas/userSchema');
 const validateToken = async (token) => {
     let userData = await jwt.verify(token, jtw_secret);
     let id = userData._id;
-    let DBdata = await userModel.findOne({id})
+    let DBdata = await userModel.findOne({_id : id})
     if(!DBdata) return({error: true, message: "this no bueno"})
     let account = Object.keys(DBdata._doc);
 

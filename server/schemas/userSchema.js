@@ -1,4 +1,4 @@
-const { Schema, mongoose } = require('mongoose')
+const { Schema, mongoose, mongo } = require('mongoose')
 
 const userSchema = new Schema({
     username: { type: String, required: true},
@@ -8,7 +8,7 @@ const userSchema = new Schema({
     created_at: { type: Date, required: true},
     posts: { type: Array, ref: 'Posts' },
     comments: {type: Array, ref: 'Comments'},
-    followers: {type: Array}
+    followers: [{type: mongoose.Types.ObjectId, ref: "users", unique: true}]
 });
 
 const userModel = mongoose.model("User", userSchema);

@@ -5,11 +5,7 @@ const { Router } = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 
-const signup = Router();
-const login = Router();
-
 const saltRounds = 10; 
-
 
 const dataValidation = async({username, password, email}) => {
     //Email
@@ -47,40 +43,7 @@ const manual = async ({res, data}) =>{
     res.send("error")
 }
 
-signup.post('/signup', async (req, res) =>{
-    let data = req.body;
-    let {username, password, email} = data;
-    const data_status = await dataValidation(data);
-    if(data_status.type == "rejected"){
-        res.send(data_status.error);
-        return;
-    }
-    password = await bcrypt.hash(password, saltRounds);
-
-    let mongo_response;
-    try{
-        mongo_response = await userModel.create({
-            username,
-            password,
-            email,
-            created_at: new Date()
-        })
-        console.log(mongo_response);
-        
-    }catch(e){
-        console.log(e);
-    }
-    let plain_object = {};
-    Object.keys(mongo_response._doc).forEach((key) =>{
-        const item = mongo_response[key];
-        plain_object[key] = item;
-    })
-    
-    const token = jwt.sign(plain_object, jtw_secret);
-    res.send(token);
-});
-
-login.post('/login', async(req, res) =>{
+const loginLogic = ({req, res}) =>{
     let data = req.body
     const {token} = data;
 
@@ -98,8 +61,41 @@ login.post('/login', async(req, res) =>{
         if(!data.email) res.status(400).send("missing email");
         if(!data.password) res.status(400).send("missing password");
         
-        manual({res, data})
+        manual({res, data});
     }
-});
+}
+const signupLogic = async ({req, res}) =>{
+    let data = req.body;
+    let {username, password, email} = data;
+    const data_status = await dataValidation(data);
+    if(data_status.type == "rejected"){
+        res.send(data_status.error);
+        return;
+    }
+    password = await bcrypt.hash(password, saltRounds);
 
-module.exports = {login, signup}
+    let mongo_response;
+    try{
+        mongo_response = await userModel.create({
+            username,
+            password,
+            email,
+            created_at: new Date(),
+            followers: new Set()
+        })
+        console.log(mongo_response);
+        
+    }catch(e){
+        console.log(e);
+    }
+    let plain_object = {};
+    Object.keys(mongo_response._doc).forEach((key) =>{
+        const item = mongo_response[key];
+        plain_object[key] = item;
+    })
+    
+    const token = jwt.sign(plain_object, jtw_secret);
+    res.send(token);
+}
+
+module.exports = {loginLogic, signupLogic}
